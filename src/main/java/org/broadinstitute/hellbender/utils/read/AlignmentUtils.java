@@ -3,7 +3,6 @@ package org.broadinstitute.hellbender.utils.read;
 import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
-import htsjdk.samtools.util.Tuple;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.broadinstitute.gatk.nativebindings.smithwaterman.SWOverhangStrategy;
@@ -239,7 +238,7 @@ public final class AlignmentUtils {
             return new ImmutablePair<>(bases, baseQualities);
         }
         else {
-            final int numberRefBasesIncludingSoftclips = CigarUtils.countRefBasesIncludingSoftClips(read, 0, numCigarElements);
+            final int numberRefBasesIncludingSoftclips = CigarUtils.countRefBasesAndSoftClips(read.getCigar(), 0, numCigarElements);
             final byte[] paddedBases = new byte[numberRefBasesIncludingSoftclips];
             final byte[] paddedBaseQualities = new byte[numberRefBasesIncludingSoftclips];
             int literalPos = 0;
