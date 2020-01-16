@@ -3,9 +3,9 @@ package org.broadinstitute.hellbender.utils.read;
 import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
+import org.apache.commons.collections.iterators.ReverseListIterator;
 import org.broadinstitute.gatk.nativebindings.smithwaterman.SWOverhangStrategy;
 import org.broadinstitute.gatk.nativebindings.smithwaterman.SWParameters;
-import org.broadinstitute.hellbender.exceptions.GATKException;
 import org.broadinstitute.hellbender.utils.Utils;
 import org.broadinstitute.hellbender.utils.smithwaterman.SmithWatermanAligner;
 import org.broadinstitute.hellbender.utils.smithwaterman.SmithWatermanAlignment;
@@ -181,16 +181,7 @@ public final class CigarUtils {
             return false;
         }
         final List<CigarElement> elems = c.getCigarElements();
-        if (hasConsecutiveIndels(elems)){
-            return false;
-        }
-        if (startsWithDeletionIgnoringClips(elems)){
-            return false;
-        }
-        //revert the list and check deletions at the end
-        final List<CigarElement> elemsRev = new ArrayList<>(elems);
-        Collections.reverse(elemsRev);
-        return !startsWithDeletionIgnoringClips(elemsRev);
+        return !(hasConsecutiveIndels(elems) || startsOrEndsWithDeletionIgnoringClips(elems));
     }
 
     /**
@@ -212,17 +203,17 @@ public final class CigarUtils {
     /**
      * Checks if cigar starts with a deletion (ignoring any clips at the beginning).
      */
-    private static boolean startsWithDeletionIgnoringClips(final List<CigarElement> elems) {
-        final Iterator<CigarElement> iter = elems.iterator();
-        boolean isClip = true;
-        CigarOperator op = null;
-        while(iter.hasNext() && isClip) { //consume clips at the beginning
-            final CigarElement elem = iter.next();
-            op = elem.getOperator();
-            isClip = (op == CigarOperator.HARD_CLIP || op == CigarOperator.SOFT_CLIP);
+    private static boolean startsOrEndsWithDeletionIgnoringClips(final List<CigarElement> elems) {
+        CigarOperator lastOp = null;
+        for (final CigarElement elem : elems) {
+               final CigarOperator op = elem.getOperator();
+               if ((lastOp != null && lastOp.isClipping() && op == CigarOperator.DELETION)
+                   || (lastOp == CigarOperator.DELETION && op.isClipping())) {
+                   return true;
+               }
+               lastOp = op;
         }
-        //once all clips are consumed, is it a deletion or not?
-        return op == CigarOperator.DELETION;
+        return false;
     }
 
     /**
