@@ -103,7 +103,6 @@ public final class AssemblyBasedCallerUtils {
         final List<GATKRead> readsToUse = new ArrayList<>(region.getReads().size());
         for( final GATKRead myRead : region.getReads() ) {
             final byte minTailQualityToUse = errorCorrectReads ? HaplotypeCallerEngine.MIN_TAIL_QUALITY_WITH_ERROR_CORRECTION : minTailQuality;
-            GATKRead clippedRead = ReadClipper.hardClipLowQualEnds(myRead, minTailQualityToUse);
 
             // remove soft clips if we cannot reliably clip off adapter sequence or if the user doesn't want to use soft clips at all
             // otherwie revert soft clips so that we see the alignment start and end assuming the soft clips are all matches
@@ -111,8 +110,10 @@ public final class AssemblyBasedCallerUtils {
             // TODO -- truly in the extended region, as the unclipped bases might actually include a deletion
             // TODO -- w.r.t. the reference.  What really needs to happen is that kmers that occur before the
             // TODO -- reference haplotype start must be removed
-            clippedRead = dontUseSoftClippedBases || ! ReadUtils.hasWellDefinedFragmentSize(clippedRead) ?
-                    ReadClipper.hardClipSoftClippedBases(clippedRead) : ReadClipper.revertSoftClippedBases(clippedRead);
+            GATKRead clippedRead = dontUseSoftClippedBases || ! ReadUtils.hasWellDefinedFragmentSize(myRead) ?
+                    ReadClipper.hardClipSoftClippedBases(myRead) : ReadClipper.revertSoftClippedBases(myRead);
+
+            clippedRead = ReadClipper.hardClipLowQualEnds(clippedRead, minTailQualityToUse);
 
             clippedRead = clippedRead.isUnmapped() ? clippedRead : ReadClipper.hardClipAdaptorSequence(clippedRead);
             if ( ! clippedRead.isEmpty() && clippedRead.getCigar().getReadLength() > 0 ) {
