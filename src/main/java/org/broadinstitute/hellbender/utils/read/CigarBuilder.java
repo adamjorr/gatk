@@ -25,7 +25,7 @@ public class CigarBuilder {
     public CigarBuilder add(final CigarElement element) {
         final CigarOperator operator = element.getOperator();
 
-        if (lastOperator != null && lastOperator.isClipping() && !operator.consumesReadBases() && !operator.isClipping()) {
+        if ((lastOperator == null || lastOperator.isClipping()) && !operator.consumesReadBases() && !operator.isClipping()) {
             // skip a deletion after clipping ie at the beginning of the read
             return this;
         }
@@ -61,7 +61,7 @@ public class CigarBuilder {
     }
 
     public Cigar make() {
-        Utils.validate(section != Section.LEFT_HARD_CLIP && section != Section.LEFT_SOFT_CLIP, "cigar is completely clipped");
+        Utils.validate(section != Section.LEFT_HARD_CLIP && section != Section.LEFT_SOFT_CLIP, () -> "cigar " + cigarElements + " is completely clipped");
         return new Cigar(cigarElements);
     }
 

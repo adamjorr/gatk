@@ -461,7 +461,10 @@ public final class CigarUtilsUnitTest {
                 // clipping over a deletion
                 {"10M10D10M", 0, 10, "10S10M", "10H10M"},
                 {"10M10D10M", 0, 15, "15S5M", "15H5M"},
-                {"10M10D10M", 15, 30, "5M15S", "5M15H"}
+                {"10M10D10M", 5, 20, "5M15S", "5M15H"},
+
+                // removing leading deletions
+                {"10D10M", 0, 5, "5S5M", "5H5M"}
         };
     }
 
